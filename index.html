@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Habit Tracker">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Habit Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #161616;
+    --surface3: #1c1c1c;
+    --border: #222222;
+    --border2: #2a2a2a;
+    --accent: #c8f135;
+    --accent2: #7fff6a;
+    --text: #e8e8e8;
+    --text2: #888888;
+    --text3: #444444;
+    --done: #c8f135;
+    --miss: #ff4444;
+    --week1: #1a1a1a;
+    --week2: #141414;
+    --radius: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 32px 20px;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left h1 {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .header-left h1 span {
+    color: var(--accent);
+  }
+
+  .month-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+  }
+
+  .month-selector select {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+  }
+
+  .month-selector select option {
+    background: #1a1a1a;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 6px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 28px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .progress-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .progress-pct {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .progress-bar-bg {
+    background: var(--border);
+    border-radius: 2px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn:hover {
+    background: var(--surface3);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-accent {
+    background: var(--accent);
+    color: #0a0a0a;
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+
+  .btn-accent:hover {
+    background: var(--accent2);
+    color: #0a0a0a;
+    border-color: var(--accent2);
+  }
+
+  .btn-danger {
+    border-color: #ff4444;
+    color: #ff4444;
+  }
+
+  .btn-danger:hover {
+    background: #ff444420;
+  }
+
+  /* TABLE */
+  .table-container {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+  }
+
+  /* Week headers */
+  .week-header-row th {
+    background: var(--surface3);
+    padding: 8px 6px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    font-family: 'Space Mono', monospace;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    font-weight: 400;
+  }
+
+  .week-header-row th.habit-col {
+    text-align: left;
+    padding-left: 16px;
+    width: 200px;
+    min-width: 160px;
+  }
+
+  /* Day headers */
+  .day-header-row th {
+    background: var(--surface2);
+    padding: 6px 3px;
+    font-size: 9px;
+    color: var(--text3);
+    font-family: 'Space Mono', monospace;
+    border-bottom: 2px solid var(--border2);
+    text-align: center;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+  }
+
+  .day-header-row th.habit-col {
+    text-align: left;
+    padding-left: 16px;
+    color: var(--text2);
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+
+  /* Data rows */
+  tr.habit-row {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tr.habit-row:hover {
+    background: var(--surface2);
+  }
+
+  tr.habit-row:last-child {
+    border-bottom: none;
+  }
+
+  td.habit-name-cell {
+    padding: 0 16px;
+    min-width: 160px;
+    width: 200px;
+    position: relative;
+  }
+
+  .habit-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+  }
+
+  .habit-name-input {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    width: 100%;
+    outline: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+
+  .habit-name-input:focus {
+    background: var(--surface3);
+    cursor: text;
+    color: var(--accent);
+  }
+
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 3px;
+    opacity: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  tr.habit-row:hover .del-btn {
+    opacity: 1;
+  }
+
+  .del-btn:hover {
+    color: var(--miss);
+    background: #ff444415;
+  }
+
+  /* Checkboxes */
+  td.check-cell {
+    text-align: center;
+    padding: 0 1px;
+    vertical-align: middle;
+  }
+
+  td.check-cell.week-odd {
+    background: rgba(255,255,255,0.012);
+  }
+
+  .check-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s;
+    font-size: 13px;
+    color: transparent;
+  }
+
+  .check-btn:hover {
+    border-color: var(--accent);
+    background: rgba(200, 241, 53, 0.08);
+  }
+
+  .check-btn.done {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0a0a0a;
+    font-weight: 900;
+  }
+
+  .check-btn.future {
+    opacity: 0.25;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* Stats row per habit */
+  .stats-row-habit {
+    background: var(--surface3);
+    border-top: 2px solid var(--border2);
+  }
+
+  .stats-row-habit td {
+    padding: 6px 4px;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--text2);
+    letter-spacing: 0.3px;
+  }
+
+  .stats-row-habit td.label-cell {
+    text-align: left;
+    padding-left: 16px;
+    color: var(--text3);
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .pct-good { color: var(--accent); }
+  .pct-bad { color: var(--miss); }
+  .pct-mid { color: #ffaa00; }
+
+  /* WEEK separators */
+  .week-sep {
+    border-left: 1px solid var(--border2) !important;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 28px;
+    width: 340px;
+    max-width: 90vw;
+    transform: translateY(20px);
+    transition: transform 0.2s;
+  }
+
+  .modal-overlay.open .modal {
+    transform: translateY(0);
+  }
+
+  .modal h3 {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    color: var(--accent);
+  }
+
+  .modal input[type="text"] {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.15s;
+  }
+
+  .modal input[type="text"]:focus {
+    border-color: var(--accent);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  /* MINI CHART */
+  .chart-section {
+    margin-top: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 18px;
+  }
+
+  .chart-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 14px;
+  }
+
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 60px;
+  }
+
+  .chart-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .chart-bar {
+    width: 100%;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    opacity: 0.7;
+    min-height: 2px;
+    transition: height 0.4s ease;
+  }
+
+  .chart-bar-label {
+    font-size: 8px;
+    color: var(--text3);
+    font-family: 'Space Mono', monospace;
+    text-align: center;
+  }
+
+  /* Emoji picker for habit */
+  .emoji-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px;
+    border-radius: 3px;
+    transition: background 0.1s;
+    line-height: 1;
+  }
+
+  .emoji-btn:hover {
+    background: var(--surface3);
+  }
+
+  /* Week label in table */
+  .week-label-cell {
+    border-left: 1px solid var(--border2);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  .tag {
+    font-size: 9px;
+    font-family: 'Space Mono', monospace;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+</style>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('SW registrado ✓'))
+        .catch(e => console.warn('SW error:', e));
+    });
+  }
+
+  // Install banner (Android)
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const banner = document.getElementById('installBanner');
+    if (banner) banner.style.display = 'flex';
+  });
+
+  function installApp() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      const banner = document.getElementById('installBanner');
+      if (banner) banner.style.display = 'none';
+    });
+  }
+
+  window.addEventListener('appinstalled', () => {
+    const banner = document.getElementById('installBanner');
+    if (banner) banner.style.display = 'none';
+  });
+</script>
+</head>
+<body>
+<!-- Install Banner -->
+<div id="installBanner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111111;border:1px solid #c8f135;border-radius:8px;padding:12px 18px;gap:12px;align-items:center;z-index:9999;font-family:'Space Mono',monospace;font-size:12px;color:#e8e8e8;box-shadow:0 4px 24px rgba(0,0,0,0.7);max-width:90vw;">
+  <span style="color:#c8f135;">↓</span>
+  <span>Instalar en pantalla de inicio</span>
+  <button onclick="installApp()" style="background:#c8f135;border:none;color:#0a0a0a;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:6px 12px;border-radius:4px;cursor:pointer;">Instalar</button>
+  <button onclick="document.getElementById('installBanner').style.display='none'" style="background:none;border:none;color:#444;cursor:pointer;font-size:16px;line-height:1;">×</button>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="tag">— life as a game —</div>
+    <h1>HABIT<span>.</span><br>TRACKER</h1>
+  </div>
+  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <div class="month-selector">
+      <select id="monthSel" onchange="changeMonth(this.value)">
+        <option value="0">Enero</option>
+        <option value="1">Febrero</option>
+        <option value="2">Marzo</option>
+        <option value="3">Abril</option>
+        <option value="4">Mayo</option>
+        <option value="5">Junio</option>
+        <option value="6">Julio</option>
+        <option value="7">Agosto</option>
+        <option value="8">Septiembre</option>
+        <option value="9">Octubre</option>
+        <option value="10">Noviembre</option>
+        <option value="11">Diciembre</option>
+      </select>
+    </div>
+    <select id="yearSel" onchange="changeYear(this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:12px;padding:8px 10px;border-radius:var(--radius);cursor:pointer;outline:none;">
+    </select>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-row" id="statsRow">
+  <div class="stat-card">
+    <div class="stat-label">Hábitos</div>
+    <div class="stat-value" id="statTotal">0</div>
+    <div class="stat-sub">definidos</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Completados</div>
+    <div class="stat-value" id="statDone">0</div>
+    <div class="stat-sub">este mes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Racha actual</div>
+    <div class="stat-value" id="statStreak">0</div>
+    <div class="stat-sub">días seguidos</div>
+  </div>
+  <div class="stat-card" style="--accent:#7fff6a;">
+    <div class="stat-label">Mejor día</div>
+    <div class="stat-value" id="statBestDay">—</div>
+    <div class="stat-sub" id="statBestDaySub">sin datos</div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-header">
+    <span class="progress-title">Progreso del mes</span>
+    <span class="progress-pct" id="progressPct">0%</span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <button class="btn btn-accent" onclick="openAddModal()">+ Añadir hábito</button>
+  <button class="btn" onclick="markToday()">✓ Marcar todo hoy</button>
+  <button class="btn" onclick="clearAll()">↺ Limpiar mes</button>
+  <button class="btn" onclick="exportCSV()" style="margin-left:auto;">↓ Exportar CSV</button>
+</div>
+
+<!-- TABLE -->
+<div class="table-container">
+  <table id="habitTable">
+    <thead id="tableHead"></thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<!-- CHART -->
+<div class="chart-section">
+  <div class="chart-title">% completado por día (mes actual)</div>
+  <div class="chart-bars" id="chartBars"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalIfOutside(event)">
+  <div class="modal">
+    <h3>Nuevo hábito</h3>
+    <input type="text" id="newHabitInput" placeholder="Ej: Leer 30 minutos 📚" maxlength="40"
+      onkeydown="if(event.key==='Enter') confirmAdd()">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-accent" onclick="confirmAdd()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+const now = new Date();
+let currentMonth = now.getMonth();
+let currentYear = now.getFullYear();
+
+function storageKey() {
+  return `ht_${currentYear}_${currentMonth}`;
+}
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(storageKey())) || { habits: defaultHabits(), checks: {} }; }
+  catch { return { habits: defaultHabits(), checks: {} }; }
+}
+
+function saveState() {
+  localStorage.setItem(storageKey(), JSON.stringify(state));
+}
+
+function defaultHabits() {
+  return [
+    'Despertar temprano ⏰',
+    'Ejercicio 💪',
+    'Lectura 📚',
+    'Control de gastos 💰',
+    'Trabajo en proyectos 🔬',
+    'Ducha fría 🧊',
+    'Sin redes sociales 📵',
+  ];
+}
+
+let state = loadState();
+
+// ── YEAR SELECTOR ──────────────────────────────────────
+function populateYears() {
+  const sel = document.getElementById('yearSel');
+  sel.innerHTML = '';
+  for (let y = now.getFullYear() - 1; y <= now.getFullYear() + 1; y++) {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    if (y === currentYear) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
+function changeMonth(v) { currentMonth = +v; state = loadState(); render(); }
+function changeYear(v) { currentYear = +v; state = loadState(); render(); populateYears(); }
+
+// ── DAYS IN MONTH ──────────────────────────────────────
+function daysInMonth(m, y) { return new Date(y, m+1, 0).getDate(); }
+function getDayOfWeek(day) { return new Date(currentYear, currentMonth, day).getDay(); }
+function isToday(day) {
+  return day === now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear();
+}
+function isFuture(day) {
+  const d = new Date(currentYear, currentMonth, day);
+  const t = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return d > t;
+}
+
+// ── RENDER ─────────────────────────────────────────────
+function render() {
+  renderHead();
+  renderBody();
+  renderStats();
+  renderChart();
+  document.getElementById('monthSel').value = currentMonth;
+}
+
+function weeks(totalDays) {
+  // returns array of {label, days:[1..7]}
+  const arr = [];
+  let w = 1; let days = [];
+  for (let d = 1; d <= totalDays; d++) {
+    days.push(d);
+    if (getDayOfWeek(d) === 6 || d === totalDays) {
+      arr.push({ label: `Semana ${w}`, days: [...days] });
+      w++; days = [];
+    }
+  }
+  return arr;
+}
+
+function renderHead() {
+  const thead = document.getElementById('tableHead');
+  thead.innerHTML = '';
+  const total = daysInMonth(currentMonth, currentYear);
+  const ws = weeks(total);
+
+  // Row 1: week labels
+  const r1 = document.createElement('tr');
+  r1.className = 'week-header-row';
+  const th0 = document.createElement('th');
+  th0.className = 'habit-col';
+  th0.textContent = 'MIS HÁBITOS';
+  r1.appendChild(th0);
+  ws.forEach((w, wi) => {
+    const th = document.createElement('th');
+    th.colSpan = w.days.length;
+    th.textContent = w.label.toUpperCase();
+    if (wi > 0) th.classList.add('week-sep');
+    r1.appendChild(th);
+  });
+  thead.appendChild(r1);
+
+  // Row 2: day labels
+  const r2 = document.createElement('tr');
+  r2.className = 'day-header-row';
+  const th1 = document.createElement('th');
+  th1.className = 'habit-col';
+  th1.textContent = 'DÍA';
+  r2.appendChild(th1);
+  let prevWeekEnd = false;
+  for (let d = 1; d <= total; d++) {
+    const th = document.createElement('th');
+    const dow = getDayOfWeek(d);
+    th.innerHTML = `<div style="font-size:9px;color:var(--text3)">${DAYS_ES[dow]}</div><div style="font-size:11px;color:${isToday(d)?'var(--accent)':'var(--text2)'};font-weight:${isToday(d)?'700':'400'}">${d}</div>`;
+    if (dow === 0 && d > 1) th.classList.add('week-sep');
+    r2.appendChild(th);
+  }
+  thead.appendChild(r2);
+}
+
+function renderBody() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  const total = daysInMonth(currentMonth, currentYear);
+
+  state.habits.forEach((habit, hi) => {
+    const tr = document.createElement('tr');
+    tr.className = 'habit-row';
+
+    // Name cell
+    const td0 = document.createElement('td');
+    td0.className = 'habit-name-cell';
+    td0.innerHTML = `
+      <div class="habit-name-wrap">
+        <input class="habit-name-input" value="${escHtml(habit)}" 
+          data-idx="${hi}" onchange="renameHabit(${hi}, this.value)" 
+          title="Haz clic para editar">
+        <button class="del-btn" onclick="deleteHabit(${hi})" title="Eliminar">×</button>
+      </div>`;
+    tr.appendChild(td0);
+
+    // Check cells
+    for (let d = 1; d <= total; d++) {
+      const td = document.createElement('td');
+      td.className = 'check-cell';
+      const dow = getDayOfWeek(d);
+      if (dow === 0 && d > 1) td.classList.add('week-sep');
+      const key = `${hi}_${d}`;
+      const done = !!state.checks[key];
+      const future = isFuture(d);
+      const btn = document.createElement('button');
+      btn.className = 'check-btn' + (done ? ' done' : '') + (future ? ' future' : '');
+      btn.innerHTML = done ? '✓' : '';
+      btn.title = `Día ${d}`;
+      if (!future) btn.onclick = () => toggleCheck(hi, d);
+      td.appendChild(btn);
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  });
+
+  // Stats rows (hecho / no hecho / %)
+  const labels = ['Hecho', 'No hecho', '%'];
+  labels.forEach((lbl, li) => {
+    const tr = document.createElement('tr');
+    tr.className = 'stats-row-habit';
+    const td0 = document.createElement('td');
+    td0.className = 'label-cell';
+    td0.textContent = lbl;
+    tr.appendChild(td0);
+
+    for (let d = 1; d <= total; d++) {
+      const td = document.createElement('td');
+      if (getDayOfWeek(d) === 0 && d > 1) td.classList.add('week-sep');
+      if (!isFuture(d)) {
+        const doneCount = state.habits.reduce((s, _, hi) => s + (state.checks[`${hi}_${d}`] ? 1 : 0), 0);
+        const total_h = state.habits.length;
+        const miss = total_h - doneCount;
+        const pct = total_h ? Math.round(doneCount/total_h*100) : 0;
+        if (li === 0) { td.textContent = doneCount; td.style.color = doneCount === total_h ? 'var(--accent)' : 'var(--text2)'; }
+        else if (li === 1) { td.textContent = miss; td.style.color = miss > 0 ? '#ff4444' : 'var(--text3)'; }
+        else {
+          td.textContent = pct + '%';
+          td.className += ' ' + (pct >= 80 ? 'pct-good' : pct >= 50 ? 'pct-mid' : 'pct-bad');
+        }
+      } else {
+        td.textContent = '—';
+        td.style.color = 'var(--text3)';
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function renderStats() {
+  const total = daysInMonth(currentMonth, currentYear);
+  const habits = state.habits.length;
+  let done = 0, possible = 0;
+  let dayScores = {};
+
+  for (let d = 1; d <= total; d++) {
+    if (isFuture(d)) continue;
+    let dc = 0;
+    state.habits.forEach((_, hi) => {
+      if (state.checks[`${hi}_${d}`]) { done++; dc++; }
+      possible++;
+    });
+    dayScores[d] = habits ? dc / habits : 0;
+  }
+
+  const pct = possible ? Math.round(done / possible * 100) : 0;
+  document.getElementById('statTotal').textContent = habits;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressBar').style.width = pct + '%';
+
+  // Streak: consecutive days up to today with ≥ 1 done
+  let streak = 0;
+  for (let d = now.getDate(); d >= 1; d--) {
+    if (currentMonth !== now.getMonth() || currentYear !== now.getFullYear()) break;
+    const dc = state.habits.reduce((s, _, hi) => s + (state.checks[`${hi}_${d}`] ? 1 : 0), 0);
+    if (dc > 0) streak++;
+    else break;
+  }
+  document.getElementById('statStreak').textContent = streak;
+
+  // Best day
+  let bestDay = null, bestScore = -1;
+  Object.entries(dayScores).forEach(([d, s]) => { if (s > bestScore) { bestScore = s; bestDay = +d; } });
+  if (bestDay) {
+    document.getElementById('statBestDay').textContent = bestDay;
+    document.getElementById('statBestDaySub').textContent = Math.round(bestScore*100) + '% completado';
+  }
+}
+
+function renderChart() {
+  const total = daysInMonth(currentMonth, currentYear);
+  const cont = document.getElementById('chartBars');
+  cont.innerHTML = '';
+  const habits = state.habits.length;
+
+  for (let d = 1; d <= total; d++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'chart-bar-wrap';
+    let pct = 0;
+    if (!isFuture(d) && habits) {
+      const dc = state.habits.reduce((s, _, hi) => s + (state.checks[`${hi}_${d}`] ? 1 : 0), 0);
+      pct = dc / habits;
+    }
+    const bar = document.createElement('div');
+    bar.className = 'chart-bar';
+    bar.style.height = (pct * 100) + '%';
+    bar.style.opacity = isFuture(d) ? '0.1' : (0.3 + pct * 0.7);
+    bar.title = `Día ${d}: ${Math.round(pct*100)}%`;
+    const lbl = document.createElement('div');
+    lbl.className = 'chart-bar-label';
+    lbl.textContent = d % 5 === 0 ? d : '';
+    wrap.appendChild(bar);
+    wrap.appendChild(lbl);
+    cont.appendChild(wrap);
+  }
+}
+
+// ── ACTIONS ────────────────────────────────────────────
+function toggleCheck(hi, d) {
+  const key = `${hi}_${d}`;
+  state.checks[key] = !state.checks[key];
+  saveState();
+  render();
+}
+
+function renameHabit(idx, val) {
+  state.habits[idx] = val.trim() || state.habits[idx];
+  saveState();
+}
+
+function deleteHabit(idx) {
+  if (!confirm(`¿Eliminar "${state.habits[idx]}"?`)) return;
+  // Remove checks for this habit
+  const total = daysInMonth(currentMonth, currentYear);
+  for (let d = 1; d <= total; d++) delete state.checks[`${idx}_${d}`];
+  // Re-index remaining habits' checks
+  const newChecks = {};
+  Object.entries(state.checks).forEach(([k, v]) => {
+    const [hi, d] = k.split('_').map(Number);
+    const newIdx = hi > idx ? hi - 1 : hi;
+    if (hi !== idx) newChecks[`${newIdx}_${d}`] = v;
+  });
+  state.habits.splice(idx, 1);
+  state.checks = newChecks;
+  saveState();
+  render();
+}
+
+function openAddModal() {
+  document.getElementById('newHabitInput').value = '';
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('newHabitInput').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function closeModalIfOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function confirmAdd() {
+  const val = document.getElementById('newHabitInput').value.trim();
+  if (!val) return;
+  state.habits.push(val);
+  saveState();
+  closeModal();
+  render();
+}
+
+function markToday() {
+  const d = now.getDate();
+  if (currentMonth !== now.getMonth() || currentYear !== now.getFullYear()) return;
+  state.habits.forEach((_, hi) => { state.checks[`${hi}_${d}`] = true; });
+  saveState();
+  render();
+}
+
+function clearAll() {
+  if (!confirm('¿Limpiar todos los checks de este mes?')) return;
+  state.checks = {};
+  saveState();
+  render();
+}
+
+function exportCSV() {
+  const total = daysInMonth(currentMonth, currentYear);
+  let csv = 'Hábito,' + Array.from({length:total},(_,i)=>i+1).join(',') + '\n';
+  state.habits.forEach((h, hi) => {
+    const row = [h];
+    for (let d = 1; d <= total; d++) row.push(state.checks[`${hi}_${d}`] ? 1 : 0);
+    csv += row.join(',') + '\n';
+  });
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `habitos_${MONTHS_ES[currentMonth]}_${currentYear}.csv`;
+  a.click();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INIT ───────────────────────────────────────────────
+populateYears();
+render();
+</script>
+</body>
+</html>
